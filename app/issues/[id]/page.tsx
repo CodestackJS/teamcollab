@@ -5,7 +5,7 @@ import delay from "delay";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import EditIssueButton from "./EditIssueButton";
-import DeleteIssueButton from "../DeleteIssueButton";
+import DeleteIssueButton from "./DeleteIssueButton";
 
 // interface Props {
 //     params:{id:string}

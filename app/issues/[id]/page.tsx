@@ -11,7 +11,8 @@ import DeleteIssueButton from "./DeleteIssueButton";
 //     params:{id:string}
 // }
 
-const IssuesDetailPage = async ({ params }: { params: { id: string } }) => {
+const IssuesDetailPage = async (props: { params: Promise<{ id: string }> }) => {
+  const params = await props.params;
   const issue = await prisma.issue.findUnique({
     where: { id: parseInt(params.id) },
   });

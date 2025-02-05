@@ -1,17 +1,34 @@
-import { issueSchema } from "@/app/validationSchemas";
+import { issueSchema, patchIssueSchema } from "@/app/validationSchemas";
 import { prisma } from "@/prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import delay from 'delay'
+import authOptions from "@/app/auth/authOptions";
+import { getServerSession } from "next-auth";
 
 
-export async function PATCH(request:NextRequest,{params}: {params:{id:string}}) {
+export async function PATCH(request:NextRequest, props: {params: Promise<{id:string}>}) {
+    const params = await props.params
+
+    const sessions = await getServerSession(authOptions)
+
+    if(!sessions) 
+       return NextResponse.json({},{status: 401});
 
   const body = await request.json();
 
-   const validation = issueSchema.safeParse(body);
+   const validation = patchIssueSchema.safeParse(body);
 
    if(!validation.success) 
     return NextResponse.json(validation.error.format(),{status: 400});
+
+   const {assignedToUserId,title,description} = body;
+
+        if(assignedToUserId) {
+           const user = await prisma.user.findUnique({where: {id: assignedToUserId}})
+           if(!user)
+                return NextResponse.json({error: "Invalid User."},{status: 400})
+        }
+
 
      const issue = await prisma.issue.findUnique({
             where: {id:parseInt(params.id)}
@@ -23,8 +40,9 @@ export async function PATCH(request:NextRequest,{params}: {params:{id:string}}) 
         const updateIssue = await prisma.issue.update({
             where: {id: issue.id},
             data: {
-                title: body.title,
-                description: body.description
+                title,
+                description,
+                assignedToUserId
             }
         });
 
@@ -33,7 +51,12 @@ export async function PATCH(request:NextRequest,{params}: {params:{id:string}}) 
 
 
 
-export async function DELETE(request:NextRequest,{params}: {params:{id:string}}) {
+export async function DELETE(request:NextRequest, props: {params: Promise<{id:string}>}) {
+    const params = await props.params
+    const sessions = await getServerSession(authOptions)
+
+    if(!sessions) 
+       return NextResponse.json({},{status: 401});
 
     
 
